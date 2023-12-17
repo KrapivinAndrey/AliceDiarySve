@@ -1,0 +1,7 @@
+pymorphy2
+sentry-sdk
+python-dateutil
+requests
+pydantic
+xmltodict
+bs4
