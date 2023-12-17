@@ -1,0 +1,66 @@
+name: Deploy Alice skill
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.grammar'
+      - '**.txt'
+
+jobs:
+  Staging:
+    environment:
+      name: Staging
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Yandex CLI
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i /opt/yc -n
+        shell: bash
+      - name: Auth
+        run: |
+          /opt/yc/bin/yc config set token ${{ secrets.YAAUTH }}
+        shell: bash
+      - name: Deploy
+        run: |
+          mkdir -p build
+          cp -r alice build
+          cp requirements.txt build
+          /opt/yc/bin/yc serverless function version create \
+              --function-id ${{ secrets.YAFUNCTION_ID }} \
+              --source-path build \
+              --runtime python311 \
+              --entrypoint alice.skill.main.handler \
+              --memory 128M \
+              --execution-timeout 5s \
+              --environment SENTRY_DSN=${{ secrets.SENTRY_DSN }},DEBUG=False,ENVIRONMENT=Stage
+  Production:
+    environment:
+      name: Production
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Yandex CLI
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i /opt/yc -n
+        shell: bash
+      - name: Auth
+        run: |
+          /opt/yc/bin/yc config set token ${{ secrets.YAAUTH }}
+        shell: bash
+      - name: Deploy
+        run: |
+          mkdir -p build
+          cp -r alice build
+          cp requirements.txt build
+          /opt/yc/bin/yc serverless function version create \
+              --function-id ${{ secrets.YAFUNCTION_ID }} \
+              --source-path build \
+              --runtime python311 \
+              --entrypoint alice.skill.main.handler \
+              --memory 128M \
+              --execution-timeout 5s \
+              --environment SENTRY_DSN=${{ secrets.SENTRY_DSN }},DEBUG=False,ENVIRONMENT=Prod

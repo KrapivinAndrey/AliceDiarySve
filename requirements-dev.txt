@@ -1,0 +1,13 @@
+pytest
+pytest-cov
+flake8
+black
+isort
+pyaspeller
+fluentcheck
+alicefluentcheck
+requests-mock
+datamodel-code-generator
+ngrok
+flask~=2.0
+flask-cors~=3.0
